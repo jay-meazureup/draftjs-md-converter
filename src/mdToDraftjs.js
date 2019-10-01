@@ -25,6 +25,18 @@ const defaultBlockStyles = {
   BlockQuote: 'blockquote'
 };
 
+// any of the node children could be of type image.
+const isAnyChildAnImage = children => {
+  let bImage = false;
+  for (let i = 0; i < children.length; i++) {
+    if (children[i].type === 'Image') {
+      bImage = true;
+      break;
+    }
+  }
+  return bImage;
+};
+
 const getBlockStyleForMd = (node, blockStyles) => {
   const style = node.type;
   const ordered = node.ordered;
@@ -37,7 +49,7 @@ const getBlockStyleForMd = (node, blockStyles) => {
     node.type === 'Paragraph' &&
     node.children &&
     node.children[0] &&
-    node.children[0].type === 'Image'
+    isAnyChildAnImage(node.children)
   ) {
     return 'atomic';
   } else if (node.type === 'Paragraph' && node.raw && node.raw.match(/^\[\[\s\S+\s.*\S+\s\]\]/)) {
@@ -122,7 +134,7 @@ const parseMdLine = (line, existingEntities, extraStyles = {}) => {
     entityRanges.push({
       key: entityKey,
       length: 1,
-      offset: text.length
+      offset: text.length ? text.length - 1 : text.length
     });
   };
 
