@@ -1,35 +1,15 @@
 'use strict';
 
-var _extends =
-  Object.assign ||
-  function(target) {
-    for (let i = 1; i < arguments.length; i++) {
-      const source = arguments[i];
-      for (const key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-    return target;
-  };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-function _toConsumableArray(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-      arr2[i] = arr[i];
-    }
-    return arr2;
-  }
-  return Array.from(arr);
-}
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-const defaultMarkdownDict = {
+var defaultMarkdownDict = {
   BOLD: '__',
   ITALIC: '*'
 };
 
-const blockStyleDict = {
+var blockStyleDict = {
   'unordered-list-item': '- ',
   'header-one': '# ',
   'header-two': '## ',
@@ -40,46 +20,46 @@ const blockStyleDict = {
   blockquote: '> '
 };
 
-const wrappingBlockStyleDict = {
+var wrappingBlockStyleDict = {
   'code-block': '```'
 };
 
-const getBlockStyle = function getBlockStyle(currentStyle, appliedBlockStyles) {
+var getBlockStyle = function getBlockStyle(currentStyle, appliedBlockStyles) {
   if (currentStyle === 'ordered-list-item') {
-    const counter = appliedBlockStyles.reduce((prev, style) => {
+    var counter = appliedBlockStyles.reduce(function (prev, style) {
       if (style === 'ordered-list-item') {
         return prev + 1;
       }
       return prev;
     }, 1);
-    return `${counter}. `;
+    return counter + '. ';
   }
   return blockStyleDict[currentStyle] || '';
 };
 
-const applyWrappingBlockStyle = function applyWrappingBlockStyle(currentStyle, content) {
+var applyWrappingBlockStyle = function applyWrappingBlockStyle(currentStyle, content) {
   if (currentStyle in wrappingBlockStyleDict) {
-    const wrappingSymbol = wrappingBlockStyleDict[currentStyle];
-    return `${wrappingSymbol}\n${content}\n${wrappingSymbol}`;
+    var wrappingSymbol = wrappingBlockStyleDict[currentStyle];
+    return wrappingSymbol + '\n' + content + '\n' + wrappingSymbol;
   }
 
   return content;
 };
 
-const applyAtomicStyle = function applyAtomicStyle(block, entityMap, content) {
+var applyAtomicStyle = function applyAtomicStyle(block, entityMap, content) {
   if (block.type !== 'atomic') return content;
   // strip the test that was added in the media block
-  const strippedContent = content.substring(0, content.length - block.text.length);
-  const key = block.entityRanges[0].key;
-  const type = entityMap[key].type;
-  const data = entityMap[key].data;
+  var strippedContent = content.substring(0, content.length - block.text.length);
+  var key = block.entityRanges[0].key;
+  var type = entityMap[key].type;
+  var data = entityMap[key].data;
   if (type === 'draft-js-video-plugin-video') {
-    return `${strippedContent}[[ embed url=${data.url || data.src} ]]`;
+    return strippedContent + '[[ embed url=' + (data.url || data.src) + ' ]]';
   }
-  return `${strippedContent}![${data.fileName || ''}](${data.url || data.src})`;
+  return strippedContent + '![' + (data.fileName || '') + '](' + (data.url || data.src) + ')';
 };
 
-const getEntityStart = function getEntityStart(entity) {
+var getEntityStart = function getEntityStart(entity) {
   switch (entity.type) {
     case 'LINK':
       return '[';
@@ -88,158 +68,136 @@ const getEntityStart = function getEntityStart(entity) {
   }
 };
 
-const getEntityEnd = function getEntityEnd(entity) {
+var getEntityEnd = function getEntityEnd(entity) {
   switch (entity.type) {
     case 'LINK':
-      return `](${entity.data.url})`;
+      return '](' + entity.data.url + ')';
     default:
       return '';
   }
 };
 
 function fixWhitespacesInsideStyle(text, style) {
-  const symbol = style.symbol;
+  var symbol = style.symbol;
 
   // Text before style-opening marker (including the marker)
 
-  const pre = text.slice(0, style.range.start);
+  var pre = text.slice(0, style.range.start);
   // Text between opening and closing markers
-  const body = text.slice(style.range.start, style.range.end);
+  var body = text.slice(style.range.start, style.range.end);
   // Trimmed text between markers
-  const bodyTrimmed = body.trim();
+  var bodyTrimmed = body.trim();
   // Text after closing marker
-  const post = text.slice(style.range.end);
+  var post = text.slice(style.range.end);
 
-  const bodyTrimmedStart = style.range.start + body.indexOf(bodyTrimmed);
+  var bodyTrimmedStart = style.range.start + body.indexOf(bodyTrimmed);
 
   // Text between opening marker and trimmed content (leading spaces)
-  const prefix = text.slice(style.range.start, bodyTrimmedStart);
+  var prefix = text.slice(style.range.start, bodyTrimmedStart);
   // Text between the end of trimmed content and closing marker (trailing spaces)
-  const postfix = text.slice(bodyTrimmedStart + bodyTrimmed.length, style.range.end);
+  var postfix = text.slice(bodyTrimmedStart + bodyTrimmed.length, style.range.end);
 
   // Temporary text that contains trimmed content wrapped into original pre- and post-texts
-  const newText = `${pre}${bodyTrimmed}${post}`;
+  var newText = '' + pre + bodyTrimmed + post;
   // Insert leading and trailing spaces between pre-/post- contents and their respective markers
-  return newText.replace(
-    `${symbol}${bodyTrimmed}${symbol}`,
-    `${prefix}${symbol}${bodyTrimmed}${symbol}${postfix}`
-  );
+  return newText.replace('' + symbol + bodyTrimmed + symbol, '' + prefix + symbol + bodyTrimmed + symbol + postfix);
 }
 
 function getInlineStyleRangesByLength(inlineStyleRanges) {
-  return [].concat(_toConsumableArray(inlineStyleRanges)).sort((a, b) => b.length - a.length);
+  return [].concat(_toConsumableArray(inlineStyleRanges)).sort(function (a, b) {
+    return b.length - a.length;
+  });
 }
 
 function draftjsToMd(raw, extraMarkdownDict) {
-  const markdownDict = _extends({}, defaultMarkdownDict, extraMarkdownDict);
-  const appliedBlockStyles = [];
+  var markdownDict = _extends({}, defaultMarkdownDict, extraMarkdownDict);
+  var appliedBlockStyles = [];
 
-  return raw.blocks
-    .map(block => {
-      // totalOffset is a difference of index position between raw string and enhanced ones
-      let totalOffset = 0;
-      let returnString = '';
+  return raw.blocks.map(function (block) {
+    // totalOffset is a difference of index position between raw string and enhanced ones
+    var totalOffset = 0;
+    var returnString = '';
 
-      // add block style
-      returnString += getBlockStyle(block.type, appliedBlockStyles);
-      appliedBlockStyles.push(block.type);
+    // add block style
+    returnString += getBlockStyle(block.type, appliedBlockStyles);
+    appliedBlockStyles.push(block.type);
 
-      const appliedStyles = [];
-      returnString += block.text.split('').reduce((text, currentChar, index) => {
-        let newText = text;
+    var appliedStyles = [];
+    returnString += block.text.split('').reduce(function (text, currentChar, index) {
+      var newText = text;
 
-        const sortedInlineStyleRanges = getInlineStyleRangesByLength(block.inlineStyleRanges);
+      var sortedInlineStyleRanges = getInlineStyleRangesByLength(block.inlineStyleRanges);
 
-        // find all styled at this character
-        const stylesStartAtChar = sortedInlineStyleRanges
-          .filter(range => range.offset === index)
-          .filter(range => markdownDict[range.style]); // disregard styles not defined in the md dict
+      // find all styled at this character
+      var stylesStartAtChar = sortedInlineStyleRanges.filter(function (range) {
+        return range.offset === index;
+      }).filter(function (range) {
+        return markdownDict[range.style];
+      }); // disregard styles not defined in the md dict
 
-        // add the symbol to the md string and push the style in the applied styles stack
-        stylesStartAtChar.forEach(currentStyle => {
-          const symbolLength = markdownDict[currentStyle.style].length;
-          newText += markdownDict[currentStyle.style];
-          totalOffset += symbolLength;
-          appliedStyles.push({
-            symbol: markdownDict[currentStyle.style],
-            range: {
-              start: currentStyle.offset + totalOffset,
-              end: currentStyle.offset + currentStyle.length + totalOffset
-            },
-            end: currentStyle.offset + (currentStyle.length - 1)
-          });
+      // add the symbol to the md string and push the style in the applied styles stack
+      stylesStartAtChar.forEach(function (currentStyle) {
+        var symbolLength = markdownDict[currentStyle.style].length;
+        newText += markdownDict[currentStyle.style];
+        totalOffset += symbolLength;
+        appliedStyles.push({
+          symbol: markdownDict[currentStyle.style],
+          range: {
+            start: currentStyle.offset + totalOffset,
+            end: currentStyle.offset + currentStyle.length + totalOffset
+          },
+          end: currentStyle.offset + (currentStyle.length - 1)
         });
+      });
 
-        // check for entityRanges starting and add if existing
-        const entitiesStartAtChar = block.entityRanges.filter(range => range.offset === index);
-        entitiesStartAtChar.forEach(entity => {
-          newText += getEntityStart(raw.entityMap[entity.key]);
-        });
+      // check for entityRanges starting and add if existing
+      var entitiesStartAtChar = block.entityRanges.filter(function (range) {
+        return range.offset === index;
+      });
+      entitiesStartAtChar.forEach(function (entity) {
+        newText += getEntityStart(raw.entityMap[entity.key]);
+      });
 
-        // add the current character to the md string
-        newText += currentChar;
+      // add the current character to the md string
+      newText += currentChar;
 
-        // check for entityRanges ending and add if existing
-        const entitiesEndAtChar = block.entityRanges.filter(
-          range => range.offset + range.length - 1 === index
-        );
-        entitiesEndAtChar.forEach(entity => {
-          newText += getEntityEnd(raw.entityMap[entity.key]);
-        });
+      // check for entityRanges ending and add if existing
+      var entitiesEndAtChar = block.entityRanges.filter(function (range) {
+        return range.offset + range.length - 1 === index;
+      });
+      entitiesEndAtChar.forEach(function (entity) {
+        newText += getEntityEnd(raw.entityMap[entity.key]);
+      });
 
-        // apply the 'ending' tags for any styles that end in the current position in order (stack)
-        while (
-          appliedStyles.length !== 0 &&
-          appliedStyles[appliedStyles.length - 1].end === index
-        ) {
-          const endingStyle = appliedStyles.pop();
-          newText += endingStyle.symbol;
+      // apply the 'ending' tags for any styles that end in the current position in order (stack)
+      while (appliedStyles.length !== 0 && appliedStyles[appliedStyles.length - 1].end === index) {
+        var endingStyle = appliedStyles.pop();
+        newText += endingStyle.symbol;
 
-          newText = fixWhitespacesInsideStyle(newText, endingStyle);
-          totalOffset += endingStyle.symbol.length;
-        }
+        newText = fixWhitespacesInsideStyle(newText, endingStyle);
+        totalOffset += endingStyle.symbol.length;
+      }
 
-        return newText;
-      }, '');
+      return newText;
+    }, '');
 
-      returnString = applyWrappingBlockStyle(block.type, returnString);
-      returnString = applyAtomicStyle(block, raw.entityMap, returnString);
+    returnString = applyWrappingBlockStyle(block.type, returnString);
+    returnString = applyAtomicStyle(block, raw.entityMap, returnString);
 
-      return returnString;
-    })
-    .join('\n');
+    return returnString;
+  }).join('\n');
 }
 
 module.exports.draftjsToMd = draftjsToMd;
-('use strict');
+'use strict';
 
-var _extends =
-  Object.assign ||
-  function(target) {
-    for (let i = 1; i < arguments.length; i++) {
-      const source = arguments[i];
-      for (const key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-    return target;
-  };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-function _toConsumableArray(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-      arr2[i] = arr[i];
-    }
-    return arr2;
-  }
-  return Array.from(arr);
-}
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-const parse = require('@textlint/markdown-to-ast').parse;
+var parse = require('@textlint/markdown-to-ast').parse;
 
-const defaultInlineStyles = {
+var defaultInlineStyles = {
   Strong: {
     type: 'BOLD',
     symbol: '__'
@@ -250,7 +208,7 @@ const defaultInlineStyles = {
   }
 };
 
-const defaultBlockStyles = {
+var defaultBlockStyles = {
   List: 'unordered-list-item',
   Header1: 'header-one',
   Header2: 'header-two',
@@ -262,10 +220,11 @@ const defaultBlockStyles = {
   BlockQuote: 'blockquote'
 };
 
-const isAnyChildAnImage = function isAnyChildAnImage(children) {
-  let bImage = false;
-  for (let i = 0; i < children.length; i++) {
-    if (child.type === 'Image') {
+// any of the node children could be of type image.
+var isAnyChildAnImage = function isAnyChildAnImage(children) {
+  var bImage = false;
+  for (var i = 0; i < children.length; i++) {
+    if (children[i].type === 'Image') {
       bImage = true;
       break;
     }
@@ -273,20 +232,15 @@ const isAnyChildAnImage = function isAnyChildAnImage(children) {
   return bImage;
 };
 
-const getBlockStyleForMd = function getBlockStyleForMd(node, blockStyles) {
-  const style = node.type;
-  const ordered = node.ordered;
-  const depth = node.depth;
+var getBlockStyleForMd = function getBlockStyleForMd(node, blockStyles) {
+  var style = node.type;
+  var ordered = node.ordered;
+  var depth = node.depth;
   if (style === 'List' && ordered) {
     return 'ordered-list-item';
   } else if (style === 'Header') {
-    return blockStyles[`${style}${depth}`];
-  } else if (
-    node.type === 'Paragraph' &&
-    node.children &&
-    node.children[0] &&
-    isAnyChildAnImage(node.children)
-  ) {
+    return blockStyles['' + style + depth];
+  } else if (node.type === 'Paragraph' && node.children && node.children[0] && isAnyChildAnImage(node.children)) {
     return 'atomic';
   } else if (node.type === 'Paragraph' && node.raw && node.raw.match(/^\[\[\s\S+\s.*\S+\s\]\]/)) {
     return 'atomic';
@@ -294,18 +248,14 @@ const getBlockStyleForMd = function getBlockStyleForMd(node, blockStyles) {
   return blockStyles[style];
 };
 
-const joinCodeBlocks = function joinCodeBlocks(splitMd) {
-  const opening = splitMd.indexOf('```');
-  const closing = splitMd.indexOf('```', opening + 1);
+var joinCodeBlocks = function joinCodeBlocks(splitMd) {
+  var opening = splitMd.indexOf('```');
+  var closing = splitMd.indexOf('```', opening + 1);
 
   if (opening >= 0 && closing >= 0) {
-    const codeBlock = splitMd.slice(opening, closing + 1);
-    const codeBlockJoined = codeBlock.join('\n');
-    const updatedSplitMarkdown = [].concat(
-      _toConsumableArray(splitMd.slice(0, opening)),
-      [codeBlockJoined],
-      _toConsumableArray(splitMd.slice(closing + 1))
-    );
+    var codeBlock = splitMd.slice(opening, closing + 1);
+    var codeBlockJoined = codeBlock.join('\n');
+    var updatedSplitMarkdown = [].concat(_toConsumableArray(splitMd.slice(0, opening)), [codeBlockJoined], _toConsumableArray(splitMd.slice(closing + 1)));
 
     return joinCodeBlocks(updatedSplitMarkdown);
   }
@@ -313,38 +263,40 @@ const joinCodeBlocks = function joinCodeBlocks(splitMd) {
   return splitMd;
 };
 
-const splitMdBlocks = function splitMdBlocks(md) {
-  const splitMd = md.split('\n');
+var splitMdBlocks = function splitMdBlocks(md) {
+  var splitMd = md.split('\n');
 
   // Process the split markdown include the
   // one syntax where there's an block level opening
   // and closing symbol with content in the middle.
-  const splitMdWithCodeBlocks = joinCodeBlocks(splitMd);
+  var splitMdWithCodeBlocks = joinCodeBlocks(splitMd);
   return splitMdWithCodeBlocks;
 };
 
-const parseMdLine = function parseMdLine(line, existingEntities) {
-  const extraStyles = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+var parseMdLine = function parseMdLine(line, existingEntities) {
+  var extraStyles = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-  const inlineStyles = _extends({}, defaultInlineStyles, extraStyles.inlineStyles);
-  const blockStyles = _extends({}, defaultBlockStyles, extraStyles.blockStyles);
+  var inlineStyles = _extends({}, defaultInlineStyles, extraStyles.inlineStyles);
+  var blockStyles = _extends({}, defaultBlockStyles, extraStyles.blockStyles);
 
-  const astString = parse(line);
-  let text = '';
-  const inlineStyleRanges = [];
-  const entityRanges = [];
-  const entityMap = existingEntities;
+  var astString = parse(line);
+  var text = '';
+  var inlineStyleRanges = [];
+  var entityRanges = [];
+  var entityMap = existingEntities;
 
-  const addInlineStyleRange = function addInlineStyleRange(offset, length, style) {
-    inlineStyleRanges.push({ offset, length, style });
+  var addInlineStyleRange = function addInlineStyleRange(offset, length, style) {
+    inlineStyleRanges.push({ offset: offset, length: length, style: style });
   };
 
-  const getRawLength = function getRawLength(children) {
-    return children.reduce((prev, current) => prev + (current.value ? current.value.length : 0), 0);
+  var getRawLength = function getRawLength(children) {
+    return children.reduce(function (prev, current) {
+      return prev + (current.value ? current.value.length : 0);
+    }, 0);
   };
 
-  const addLink = function addLink(child) {
-    const entityKey = Object.keys(entityMap).length;
+  var addLink = function addLink(child) {
+    var entityKey = Object.keys(entityMap).length;
     entityMap[entityKey] = {
       type: 'LINK',
       mutability: 'MUTABLE',
@@ -359,8 +311,8 @@ const parseMdLine = function parseMdLine(line, existingEntities) {
     });
   };
 
-  const addImage = function addImage(child) {
-    const entityKey = Object.keys(entityMap).length;
+  var addImage = function addImage(child) {
+    var entityKey = Object.keys(entityMap).length;
     entityMap[entityKey] = {
       type: 'IMAGE',
       mutability: 'IMMUTABLE',
@@ -377,13 +329,13 @@ const parseMdLine = function parseMdLine(line, existingEntities) {
     });
   };
 
-  const addVideo = function addVideo(child) {
-    const string = child.raw;
+  var addVideo = function addVideo(child) {
+    var string = child.raw;
 
     // RegEx: [[ embed url=<anything> ]]
-    const url = string.match(/^\[\[\s(?:embed)\s(?:url=(\S+))\s\]\]/)[1];
+    var url = string.match(/^\[\[\s(?:embed)\s(?:url=(\S+))\s\]\]/)[1];
 
-    const entityKey = Object.keys(entityMap).length;
+    var entityKey = Object.keys(entityMap).length;
     entityMap[entityKey] = {
       type: 'draft-js-video-plugin-video',
       mutability: 'IMMUTABLE',
@@ -398,9 +350,9 @@ const parseMdLine = function parseMdLine(line, existingEntities) {
     });
   };
 
-  const parseChildren = function parseChildren(child, style) {
+  var parseChildren = function parseChildren(child, style) {
     // RegEx: [[ embed url=<anything> ]]
-    const videoShortcodeRegEx = /^\[\[\s(?:embed)\s(?:url=(\S+))\s\]\]/;
+    var videoShortcodeRegEx = /^\[\[\s(?:embed)\s(?:url=(\S+))\s\]\]/;
     switch (child.type) {
       case 'Link':
         addLink(child);
@@ -417,15 +369,15 @@ const parseMdLine = function parseMdLine(line, existingEntities) {
     }
 
     if (!videoShortcodeRegEx.test(child.raw) && child.children && style) {
-      const rawLength = getRawLength(child.children);
+      var rawLength = getRawLength(child.children);
       addInlineStyleRange(text.length, rawLength, style.type);
-      const newStyle = inlineStyles[child.type];
-      child.children.forEach(grandChild => {
+      var newStyle = inlineStyles[child.type];
+      child.children.forEach(function (grandChild) {
         parseChildren(grandChild, newStyle);
       });
     } else if (!videoShortcodeRegEx.test(child.raw) && child.children) {
-      const _newStyle = inlineStyles[child.type];
-      child.children.forEach(grandChild => {
+      var _newStyle = inlineStyles[child.type];
+      child.children.forEach(function (grandChild) {
         parseChildren(grandChild, _newStyle);
       });
     } else {
@@ -435,42 +387,40 @@ const parseMdLine = function parseMdLine(line, existingEntities) {
       if (inlineStyles[child.type]) {
         addInlineStyleRange(text.length, child.value.length, inlineStyles[child.type].type);
       }
-      text = `${text}${
-        child.type === 'Image' || videoShortcodeRegEx.test(child.raw) ? ' ' : child.value
-      }`;
+      text = '' + text + (child.type === 'Image' || videoShortcodeRegEx.test(child.raw) ? ' ' : child.value);
     }
   };
 
-  astString.children.forEach(child => {
-    const style = inlineStyles[child.type];
+  astString.children.forEach(function (child) {
+    var style = inlineStyles[child.type];
     parseChildren(child, style);
   });
 
   // add block style if it exists
-  let blockStyle = 'unstyled';
+  var blockStyle = 'unstyled';
   if (astString.children[0]) {
-    const style = getBlockStyleForMd(astString.children[0], blockStyles);
+    var style = getBlockStyleForMd(astString.children[0], blockStyles);
     if (style) {
       blockStyle = style;
     }
   }
 
   return {
-    text,
-    inlineStyleRanges,
-    entityRanges,
-    blockStyle,
-    entityMap
+    text: text,
+    inlineStyleRanges: inlineStyleRanges,
+    entityRanges: entityRanges,
+    blockStyle: blockStyle,
+    entityMap: entityMap
   };
 };
 
 function mdToDraftjs(mdString, extraStyles) {
-  const paragraphs = splitMdBlocks(mdString);
-  const blocks = [];
-  let entityMap = {};
+  var paragraphs = splitMdBlocks(mdString);
+  var blocks = [];
+  var entityMap = {};
 
-  paragraphs.forEach(paragraph => {
-    const result = parseMdLine(paragraph, entityMap, extraStyles);
+  paragraphs.forEach(function (paragraph) {
+    var result = parseMdLine(paragraph, entityMap, extraStyles);
     blocks.push({
       text: result.text,
       type: result.blockStyle,
@@ -491,8 +441,8 @@ function mdToDraftjs(mdString, extraStyles) {
     };
   }
   return {
-    blocks,
-    entityMap
+    blocks: blocks,
+    entityMap: entityMap
   };
 }
 
